@@ -3,62 +3,79 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Blade Duel — 双人剑斗对战</title>
+<title>Blade Duel v0.2 — 中世纪角斗场</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b0d10; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #e6e9ef; user-select: none; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b0d10; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #e6e9ef; user-select: none; cursor: default; }
   #lobby {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(ellipse at center, #1a2030 0%, #07090c 100%); z-index: 10;
+    background: radial-gradient(ellipse at center, #2a1a10 0%, #07090c 100%); z-index: 10;
   }
   #lobby .panel {
-    width: 460px; padding: 36px 32px; background: rgba(18,22,30,0.92);
-    border: 1px solid #2a3242; border-radius: 14px;
+    width: 460px; padding: 36px 32px; background: rgba(18,14,10,0.94);
+    border: 1px solid #4a3a2a; border-radius: 14px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.6);
   }
-  h1 { font-size: 26px; margin-bottom: 6px; letter-spacing: 1px; color: #f0d890; }
-  .sub { color: #8a94a6; font-size: 13px; margin-bottom: 22px; }
+  h1 { font-size: 28px; margin-bottom: 6px; letter-spacing: 2px; color: #f0d890; }
+  .sub { color: #a08868; font-size: 13px; margin-bottom: 22px; }
   button {
     width: 100%; padding: 12px; margin: 6px 0;
-    background: linear-gradient(180deg,#3a4a6b,#243048);
-    color: #fff; border: 1px solid #4a5a78; border-radius: 8px;
-    font-size: 14px; cursor: pointer; transition: .15s;
+    background: linear-gradient(180deg,#5a3a20,#2a1a10);
+    color: #f0d890; border: 1px solid #806040; border-radius: 8px;
+    font-size: 14px; cursor: pointer; transition: .15s; letter-spacing: 1px;
   }
-  button:hover { background: linear-gradient(180deg,#4a5a80,#2d3a58); }
-  button.primary { background: linear-gradient(180deg,#b88a3a,#845c1c); border-color: #c8a04c; }
+  button:hover { background: linear-gradient(180deg,#7a5028,#3a2418); }
+  button.primary { background: linear-gradient(180deg,#b88a3a,#845c1c); border-color: #c8a04c; color: #fff; }
   button.primary:hover { background: linear-gradient(180deg,#d0a04c,#9a6a24); }
   input {
     width: 100%; padding: 10px 12px; margin: 6px 0;
-    background: #0f131a; border: 1px solid #2a3242; border-radius: 6px;
-    color: #e6e9ef; font-size: 13px; font-family: monospace;
+    background: #0f0a06; border: 1px solid #4a3a2a; border-radius: 6px;
+    color: #f0e0c0; font-size: 13px; font-family: monospace;
   }
-  .divider { height: 1px; background: #2a3242; margin: 16px 0; }
-  .status { font-size: 12px; color: #8a94a6; margin-top: 8px; min-height: 16px; text-align: center; }
+  .divider { height: 1px; background: #4a3a2a; margin: 16px 0; }
+  .status { font-size: 12px; color: #a08868; margin-top: 8px; min-height: 16px; text-align: center; }
   .link-box {
-    padding: 10px; background: #0f131a; border: 1px dashed #4a5a78;
+    padding: 10px; background: #0f0a06; border: 1px dashed #806040;
     border-radius: 6px; font-family: monospace; font-size: 11px; word-break: break-all;
-    color: #a0b0c8; margin: 8px 0; cursor: pointer;
+    color: #c0a880; margin: 8px 0; cursor: pointer;
   }
-  .link-box:hover { background: #141923; }
-  .tag { display: inline-block; padding: 2px 8px; background: #2a3242; border-radius: 4px; font-size: 11px; color: #a0b0c8; margin-right: 6px; }
+  .link-box:hover { background: #1a120a; }
+  .tag { display: inline-block; padding: 2px 8px; background: #4a3a2a; border-radius: 4px; font-size: 11px; color: #f0d890; margin-right: 6px; }
   #hud {
     position: fixed; top: 0; left: 0; right: 0; padding: 16px 24px;
     display: flex; justify-content: space-between; pointer-events: none; z-index: 5;
   }
-  .hp-block { width: 280px; }
-  .hp-block .name { font-size: 13px; margin-bottom: 4px; color: #ccd4e2; }
-  .hp-bar { height: 14px; background: #0f131a; border: 1px solid #2a3242; border-radius: 3px; overflow: hidden; }
-  .hp-fill { height: 100%; background: linear-gradient(90deg,#c03030,#e06060); transition: width .25s; }
+  .hp-block { width: 320px; }
+  .hp-block .name { font-size: 14px; margin-bottom: 4px; color: #f0d890; text-shadow: 1px 1px 2px #000; }
+  .hp-block .weapon { font-size: 11px; color: #c0a880; }
+  .hp-bar { height: 16px; background: #0f0a06; border: 1px solid #4a3a2a; border-radius: 3px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+  .hp-fill { height: 100%; background: linear-gradient(90deg,#a02020,#e04040); transition: width .25s; }
   .hp-block.right { text-align: right; }
-  .hp-block.right .hp-fill { background: linear-gradient(90deg,#3080c0,#60a0e0); }
+  .hp-block.right .hp-fill { background: linear-gradient(90deg,#3060a0,#5090d0); }
   #result {
     position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.7); z-index: 8; flex-direction: column;
+    background: rgba(0,0,0,0.75); z-index: 8; flex-direction: column;
   }
-  #result h2 { font-size: 48px; color: #f0d890; margin-bottom: 20px; letter-spacing: 4px; }
+  #result h2 { font-size: 56px; color: #f0d890; margin-bottom: 20px; letter-spacing: 6px; text-shadow: 0 4px 20px rgba(0,0,0,0.8); }
   #tips {
     position: fixed; bottom: 12px; left: 0; right: 0; text-align: center;
-    font-size: 12px; color: #6a7488; pointer-events: none; z-index: 5;
+    font-size: 12px; color: #806040; pointer-events: none; z-index: 5; text-shadow: 1px 1px 2px #000;
+  }
+  /* 红屏受击 */
+  #blood-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 6;
+    background: radial-gradient(circle at center, transparent 30%, rgba(180,0,0,0) 100%);
+    transition: background .1s;
+  }
+  #blood-overlay.hit {
+    background: radial-gradient(circle at center, rgba(180,0,0,0.2) 30%, rgba(120,0,0,0.6) 100%);
+  }
+  /* 准星 */
+  #crosshair {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    width: 14px; height: 14px; pointer-events: none; z-index: 5;
+    border: 1px solid rgba(240,216,144,0.7); border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4);
   }
   canvas { display: block; }
   .hidden { display: none !important; }
@@ -68,11 +85,11 @@
 
 <div id="lobby">
   <div class="panel">
-    <h1>⚔️ Blade Duel</h1>
-    <div class="sub">双人剑斗 · 物理驱动 · 局域网/P2P 对战</div>
+    <h1>⚔️ BLADE DUEL</h1>
+    <div class="sub">中世纪角斗场 · 双人物理对决</div>
 
     <div id="home-view">
-      <button class="primary" id="btn-host">创建房间（我是房主）</button>
+      <button class="primary" id="btn-host">创建房间(我是房主)</button>
       <div class="divider"></div>
       <input id="join-input" placeholder="粘贴房间链接或房间 ID" />
       <button id="btn-join">加入房间</button>
@@ -80,7 +97,7 @@
     </div>
 
     <div id="host-view" class="hidden">
-      <div><span class="tag">房主</span> 把下面的链接发给朋友:</div>
+      <div><span class="tag">房主</span> 把链接发给朋友:</div>
       <div class="link-box" id="share-link" title="点击复制">正在生成...</div>
       <div class="status" id="host-status">等待玩家加入...</div>
       <button id="btn-cancel-host">取消</button>
@@ -95,11 +112,13 @@
 
 <div id="hud" class="hidden">
   <div class="hp-block">
-    <div class="name" id="p1-name">红方</div>
+    <div class="name" id="p1-name">红方斗士</div>
+    <div class="weapon" id="p1-weapon">武器:长剑</div>
     <div class="hp-bar"><div class="hp-fill" id="p1-hp" style="width:100%"></div></div>
   </div>
   <div class="hp-block right">
-    <div class="name" id="p2-name">蓝方</div>
+    <div class="name" id="p2-name">蓝方斗士</div>
+    <div class="weapon" id="p2-weapon">武器:长剑</div>
     <div class="hp-bar"><div class="hp-fill" id="p2-hp" style="width:100%"></div></div>
   </div>
 </div>
@@ -109,11 +128,13 @@
   <button style="width:200px" onclick="location.reload()">再来一局</button>
 </div>
 
+<div id="blood-overlay"></div>
+<div id="crosshair" class="hidden"></div>
+
 <div id="tips" class="hidden">
-  移动 WASD · 鼠标挥剑（按住左键拖动） · 空格跳跃 · Shift 冲刺
+  WASD 移动 · 鼠标 视角 · 左键挥武器 · 右键抓取(拖动可控制对方部位) · 空格跳 · Shift 冲刺 · ESC 释放鼠标
 </div>
 
-<!-- 依赖 CDN -->
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script type="importmap">
 {
@@ -125,32 +146,127 @@
 }
 </script>
 <script type="module">
-// Blade Duel — 双人剑斗对战
-// Three.js 渲染 + Cannon-es 物理 + PeerJS WebRTC 同步
+// =============================================================
+// Blade Duel v0.2 — 中世纪角斗场
+// 多关节 ragdoll + 4 种随机武器 + 抓取约束 + 第三人称 + 流血/音效
+// =============================================================
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 
 // ==========================================================
-// 常量
+// 全局常量
 // ==========================================================
-const ARENA_SIZE = 20;
+const ARENA_R = 14;             // 角斗场半径
 const FIXED_DT = 1 / 60;
-const MAX_HP = 100;
+const MAX_HP = 200;             // 血量翻倍
+
+// 部位伤害倍率(需求 5)
+const PART_MULT = {
+  head:   2.0,
+  torso:  1.0,
+  pelvis: 1.0,
+  uarm:   0.7,
+  larm:   0.7,
+  uleg:   0.8,
+  lleg:   0.7,
+  hand:   0.6,
+};
+
+// 武器配置(需求 3)
+const WEAPONS = {
+  longsword: {
+    name: '长剑', mass: 1.4, length: 1.5, width: 0.06, depth: 0.18,
+    color: 0xdde4ee, guardColor: 0x806030, gripColor: 0x402010,
+    dmgMult: 1.0, swingForce: 90, returnForce: 18, cooldown: 250,
+    twoHand: false, hasShield: false,
+  },
+  shortsword: {
+    name: '短剑+盾', mass: 0.8, length: 0.85, width: 0.06, depth: 0.16,
+    color: 0xeeeef0, guardColor: 0x604020, gripColor: 0x301810,
+    dmgMult: 0.7, swingForce: 130, returnForce: 22, cooldown: 160,
+    twoHand: false, hasShield: true,
+  },
+  longblade: {
+    name: '长刀', mass: 1.2, length: 1.7, width: 0.05, depth: 0.22,
+    color: 0xc8d0d8, guardColor: 0x402008, gripColor: 0x1a0a04,
+    dmgMult: 1.1, swingForce: 80, returnForce: 16, cooldown: 280,
+    twoHand: true, hasShield: false,
+  },
+  morningstar: {
+    name: '钉耙', mass: 2.2, length: 1.0, width: 0.22, depth: 0.22,
+    color: 0x303030, guardColor: 0x402008, gripColor: 0x201008,
+    dmgMult: 1.6, swingForce: 70, returnForce: 14, cooldown: 380,
+    twoHand: false, hasShield: false, isMace: true,
+  },
+};
+const WEAPON_KEYS = Object.keys(WEAPONS);
 
 // ==========================================================
-// 网络层（PeerJS 信令 + WebRTC DataChannel）
+// 简易程序音效(WebAudio,无需外部资源 — 需求 6)
+// ==========================================================
+class Sfx {
+  constructor() {
+    this.ctx = null;
+  }
+  ensure() {
+    if (!this.ctx) {
+      try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    return this.ctx;
+  }
+  hit(intensity = 1) {
+    const ctx = this.ensure(); if (!ctx) return;
+    const t0 = ctx.currentTime;
+    // 低频"咚"
+    const o1 = ctx.createOscillator(); const g1 = ctx.createGain();
+    o1.type = 'sine'; o1.frequency.setValueAtTime(120, t0); o1.frequency.exponentialRampToValueAtTime(40, t0 + 0.2);
+    g1.gain.setValueAtTime(0.6 * intensity, t0); g1.gain.exponentialRampToValueAtTime(0.001, t0 + 0.25);
+    o1.connect(g1).connect(ctx.destination); o1.start(t0); o1.stop(t0 + 0.3);
+    // 高频脆响(刀刃/骨头)
+    const buf = ctx.createBuffer(1, 4410, 44100);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const filter = ctx.createBiquadFilter(); filter.type = 'highpass'; filter.frequency.value = 1500;
+    const g2 = ctx.createGain(); g2.gain.value = 0.4 * intensity;
+    src.connect(filter).connect(g2).connect(ctx.destination); src.start(t0);
+  }
+  swing() {
+    const ctx = this.ensure(); if (!ctx) return;
+    const t0 = ctx.currentTime;
+    const buf = ctx.createBuffer(1, 8800, 44100);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 1.5) * 0.3;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 800;
+    const g = ctx.createGain(); g.gain.value = 0.5;
+    src.connect(filter).connect(g).connect(ctx.destination); src.start(t0);
+  }
+  grunt() {
+    const ctx = this.ensure(); if (!ctx) return;
+    const t0 = ctx.currentTime;
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(180 + Math.random() * 40, t0);
+    o.frequency.exponentialRampToValueAtTime(80, t0 + 0.4);
+    g.gain.setValueAtTime(0.3, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.4);
+    const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 800;
+    o.connect(filter).connect(g).connect(ctx.destination);
+    o.start(t0); o.stop(t0 + 0.45);
+  }
+}
+const sfx = new Sfx();
+
+// ==========================================================
+// 网络层
 // ==========================================================
 class Net {
   constructor() {
-    this.peer = null;
-    this.conn = null;
-    this.isHost = false;
-    this.onOpen = () => {};
-    this.onData = () => {};
-    this.onClose = () => {};
+    this.peer = null; this.conn = null; this.isHost = false;
+    this.onOpen = () => {}; this.onData = () => {}; this.onClose = () => {};
   }
   _peerConfig() {
-    // 公共 STUN + 免费 TURN(metered.ca 公开服务),保证跨 NAT / 跨运营商可达
     return {
       debug: 1,
       config: {
@@ -158,21 +274,9 @@ class Net {
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
           { urls: 'stun:global.stun.twilio.com:3478' },
-          {
-            urls: 'turn:openrelay.metered.ca:80',
-            username: 'openrelayproject',
-            credential: 'openrelayproject',
-          },
-          {
-            urls: 'turn:openrelay.metered.ca:443',
-            username: 'openrelayproject',
-            credential: 'openrelayproject',
-          },
-          {
-            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-            username: 'openrelayproject',
-            credential: 'openrelayproject',
-          },
+          { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+          { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+          { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
         ],
       },
     };
@@ -189,10 +293,7 @@ class Net {
         conn.on('data', (d) => this.onData(d));
         conn.on('close', () => this.onClose());
       });
-      this.peer.on('error', (e) => {
-        console.warn('Peer error', e);
-        if (e.type === 'unavailable-id' || e.type === 'network' || e.type === 'server-error') reject(e);
-      });
+      this.peer.on('error', (e) => { if (e.type === 'unavailable-id' || e.type === 'network') reject(e); });
     });
   }
   async join(hostId) {
@@ -203,473 +304,960 @@ class Net {
       this.peer.on('open', () => {
         const conn = this.peer.connect(hostId, { reliable: false });
         this.conn = conn;
-        const timer = setTimeout(() => {
-          if (!opened) reject(new Error('连接超时,房主未响应'));
-        }, 15000);
-        conn.on('open', () => { opened = true; clearTimeout(timer); this.onOpen(); resolve(); });
+        const t = setTimeout(() => { if (!opened) reject(new Error('连接超时')); }, 15000);
+        conn.on('open', () => { opened = true; clearTimeout(t); this.onOpen(); resolve(); });
         conn.on('data', (d) => this.onData(d));
         conn.on('close', () => this.onClose());
-        conn.on('error', (e) => { clearTimeout(timer); reject(e); });
+        conn.on('error', (e) => { clearTimeout(t); reject(e); });
       });
       this.peer.on('error', (e) => reject(e));
     });
   }
-  send(obj) {
-    if (this.conn && this.conn.open) {
-      try { this.conn.send(obj); } catch (e) {}
+  send(o) { if (this.conn && this.conn.open) try { this.conn.send(o); } catch (e) {} }
+}
+
+// ==========================================================
+// 场景:中世纪角斗场(需求 4)
+// ==========================================================
+function buildArena(scene, world) {
+  // 沙地
+  const sandTex = makeNoiseTexture(0xc8a070, 0xa07840, 256);
+  const ground = new THREE.Mesh(
+    new THREE.CircleGeometry(ARENA_R, 64),
+    new THREE.MeshStandardMaterial({ map: sandTex, roughness: 0.95 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // 物理地面
+  const groundBody = new CANNON.Body({ mass: 0, shape: new CANNON.Plane() });
+  groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+  groundBody.userData = { type: 'ground' };
+  world.addBody(groundBody);
+
+  // 石砌外墙(分块拼接)
+  const wallH = 4.5;
+  const wallTex = makeNoiseTexture(0x8a7a66, 0x5a4a36, 512);
+  wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
+  wallTex.repeat.set(8, 1);
+  const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.9 });
+  const segments = 32;
+  for (let i = 0; i < segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+    const r = ARENA_R + 0.4;
+    const px = Math.cos(a) * r, pz = Math.sin(a) * r;
+    const segLen = (Math.PI * 2 * r) / segments + 0.1;
+    const block = new THREE.Mesh(
+      new THREE.BoxGeometry(segLen, wallH, 0.8),
+      wallMat
+    );
+    block.position.set(px, wallH / 2, pz);
+    block.lookAt(0, wallH / 2, 0);
+    block.rotateY(Math.PI / 2);
+    block.castShadow = true; block.receiveShadow = true;
+    scene.add(block);
+
+    const body = new CANNON.Body({ mass: 0, shape: new CANNON.Box(new CANNON.Vec3(segLen / 2, wallH / 2, 0.4)) });
+    body.position.set(px, wallH / 2, pz);
+    body.quaternion.copy(block.quaternion);
+    world.addBody(body);
+  }
+
+  // 看台剪影(高墙背后的环形)
+  for (let i = 0; i < segments; i += 2) {
+    const a = (i / segments) * Math.PI * 2;
+    const r = ARENA_R + 1.6;
+    const tier = new THREE.Mesh(
+      new THREE.BoxGeometry(2.5, 2.5, 1.2),
+      new THREE.MeshStandardMaterial({ color: 0x3a2a1c, roughness: 1 })
+    );
+    tier.position.set(Math.cos(a) * r, wallH + 1.0, Math.sin(a) * r);
+    tier.lookAt(0, tier.position.y, 0);
+    scene.add(tier);
+  }
+
+  // 拱门 / 入口标志
+  for (let k = 0; k < 4; k++) {
+    const a = (k / 4) * Math.PI * 2;
+    const r = ARENA_R + 0.6;
+    const arch = new THREE.Mesh(
+      new THREE.TorusGeometry(1.3, 0.18, 8, 24, Math.PI),
+      new THREE.MeshStandardMaterial({ color: 0x6a5a44 })
+    );
+    arch.position.set(Math.cos(a) * r, 2.2, Math.sin(a) * r);
+    arch.lookAt(0, 2.2, 0);
+    arch.rotateX(Math.PI / 2);
+    scene.add(arch);
+  }
+
+  // 火把(8 个)
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + Math.PI / 16;
+    const r = ARENA_R - 0.3;
+    const px = Math.cos(a) * r, pz = Math.sin(a) * r;
+    const torch = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.1, 0.14, 2.6),
+      new THREE.MeshStandardMaterial({ color: 0x3a2010 })
+    );
+    torch.position.set(px, 1.3, pz);
+    torch.castShadow = true;
+    scene.add(torch);
+    const fire = new THREE.PointLight(0xff8030, 1.6, 10);
+    fire.position.set(px, 2.7, pz);
+    scene.add(fire);
+    const ball = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0xffaa40 })
+    );
+    ball.position.copy(fire.position);
+    ball.userData.flicker = fire;
+    scene.add(ball);
+  }
+
+  // 中心地面图案(角斗士印记)
+  const center = new THREE.Mesh(
+    new THREE.RingGeometry(2.5, 3, 32),
+    new THREE.MeshStandardMaterial({ color: 0x4a3020, roughness: 1, transparent: true, opacity: 0.6 })
+  );
+  center.rotation.x = -Math.PI / 2;
+  center.position.y = 0.02;
+  scene.add(center);
+
+  // 远景天空圆顶
+  scene.background = new THREE.Color(0x0a0608);
+  scene.fog = new THREE.Fog(0x1a1008, 12, 40);
+}
+
+function makeNoiseTexture(c1, c2, size) {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  const g = cv.getContext('2d');
+  const a = new THREE.Color(c1), b = new THREE.Color(c2);
+  const img = g.createImageData(size, size);
+  for (let i = 0; i < size * size; i++) {
+    const t = Math.random() * 0.7 + 0.3;
+    const r = a.r * t + b.r * (1 - t);
+    const gg = a.g * t + b.g * (1 - t);
+    const bb = a.b * t + b.b * (1 - t);
+    img.data[i * 4] = r * 255;
+    img.data[i * 4 + 1] = gg * 255;
+    img.data[i * 4 + 2] = bb * 255;
+    img.data[i * 4 + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// ==========================================================
+// 流血粒子系统(需求 6)
+// ==========================================================
+class BloodSystem {
+  constructor(scene) {
+    this.scene = scene;
+    this.particles = [];
+    this.geo = new THREE.SphereGeometry(0.05, 6, 6);
+    this.mat = new THREE.MeshBasicMaterial({ color: 0x900000 });
+  }
+  spawn(pos, dir, count = 14, intensity = 1) {
+    for (let i = 0; i < count; i++) {
+      const m = new THREE.Mesh(this.geo, this.mat);
+      m.position.copy(pos);
+      this.scene.add(m);
+      this.particles.push({
+        mesh: m,
+        vel: new THREE.Vector3(
+          dir.x * 2 + (Math.random() - 0.5) * 4,
+          Math.random() * 4 + 1,
+          dir.z * 2 + (Math.random() - 0.5) * 4
+        ).multiplyScalar(intensity),
+        life: 0.6 + Math.random() * 0.4,
+        age: 0,
+      });
+    }
+  }
+  update(dt) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.age += dt;
+      p.vel.y -= 12 * dt;
+      p.mesh.position.x += p.vel.x * dt;
+      p.mesh.position.y += p.vel.y * dt;
+      p.mesh.position.z += p.vel.z * dt;
+      if (p.mesh.position.y < 0.05) {
+        p.mesh.position.y = 0.05;
+        p.vel.set(0, 0, 0);
+      }
+      if (p.age > p.life) {
+        this.scene.remove(p.mesh);
+        this.particles.splice(i, 1);
+      }
     }
   }
 }
 
 // ==========================================================
-// 物理 + 渲染 世界
+// 多关节 Ragdoll 玩家(需求 5、7)
+// ==========================================================
+class Player {
+  constructor(game, index, color, weaponKey) {
+    this.game = game; this.index = index; this.color = color;
+    this.weaponKey = weaponKey; this.weapon = WEAPONS[weaponKey];
+    this.hp = MAX_HP; this.dead = false;
+    this.lastDamageByPart = {};
+    this.lastSwingTime = 0;
+    this.facing = 0;
+    this.input = { mvx: 0, mvz: 0, yaw: 0, jump: 0, sprint: 0, swing: 0, grab: 0 };
+
+    this.parts = {};      // name -> { body, mesh }
+    this.bodies = [];     // 全部刚体
+    this.constraints = [];
+    this.grabConstraint = null;
+    this.grabbedTarget = null;
+
+    const startX = index === 0 ? -4 : 4;
+    const startZ = 0;
+    const facingY = index === 0 ? 0 : Math.PI;
+    this.facing = facingY;
+
+    this._buildRagdoll(startX, startZ, facingY);
+    this._buildWeapon(startX, startZ, facingY);
+  }
+
+  _addPart(name, geo, mat, shape, mass, pos, partType) {
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = true;
+    this.game.scene.add(mesh);
+    const body = new CANNON.Body({ mass, shape, position: new CANNON.Vec3(...pos), linearDamping: 0.1, angularDamping: 0.5 });
+    body.userData = { type: 'part', player: this, partType, partName: name };
+    this.game.world.addBody(body);
+    this.bodies.push(body);
+    this.parts[name] = { body, mesh, partType };
+    return this.parts[name];
+  }
+
+  _connect(a, b, pivotA, pivotB, axisA, axisB, useCone = false) {
+    let c;
+    if (useCone) {
+      c = new CANNON.ConeTwistConstraint(a.body, b.body, {
+        pivotA: new CANNON.Vec3(...pivotA),
+        pivotB: new CANNON.Vec3(...pivotB),
+        axisA: new CANNON.Vec3(...axisA),
+        axisB: new CANNON.Vec3(...axisB),
+        angle: Math.PI / 2,
+        twistAngle: Math.PI / 4,
+      });
+    } else {
+      c = new CANNON.PointToPointConstraint(
+        a.body, new CANNON.Vec3(...pivotA),
+        b.body, new CANNON.Vec3(...pivotB),
+        100
+      );
+    }
+    this.game.world.addConstraint(c);
+    this.constraints.push(c);
+    return c;
+  }
+
+  _buildRagdoll(x, z, facing) {
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xe8c898, roughness: 0.7 });
+    const clothMat = new THREE.MeshStandardMaterial({ color: this.color, roughness: 0.6 });
+    const bootMat = new THREE.MeshStandardMaterial({ color: 0x3a2010, roughness: 0.8 });
+
+    // 尺寸(单位:米)
+    const headR = 0.18;
+    const torsoH = 0.55, torsoW = 0.36, torsoD = 0.22;
+    const pelvisH = 0.22, pelvisW = 0.34, pelvisD = 0.22;
+    const uarmH = 0.32, uarmR = 0.07;
+    const larmH = 0.30, larmR = 0.06;
+    const ulegH = 0.40, ulegR = 0.09;
+    const llegH = 0.40, llegR = 0.08;
+
+    // Y 起始基准(脚底贴地)
+    const yFoot = 0;
+    const yLleg = yFoot + llegH / 2 + 0.05;
+    const yUleg = yLleg + llegH / 2 + ulegH / 2;
+    const yPelvis = yUleg + ulegH / 2 + pelvisH / 2;
+    const yTorso = yPelvis + pelvisH / 2 + torsoH / 2;
+    const yHead = yTorso + torsoH / 2 + headR + 0.04;
+    const yUarm = yTorso + torsoH / 2 - uarmH / 2;
+    const yLarm = yUarm - uarmH / 2 - larmH / 2;
+
+    // 头
+    this._addPart('head',
+      new THREE.SphereGeometry(headR, 16, 16), skinMat,
+      new CANNON.Sphere(headR), 1.2,
+      [x, yHead, z], 'head');
+    // 简易眼睛
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000 });
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.022), eyeMat);
+    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.022), eyeMat);
+    eyeL.position.set(-0.06, 0.02, headR - 0.02);
+    eyeR.position.set(0.06, 0.02, headR - 0.02);
+    this.parts.head.mesh.add(eyeL, eyeR);
+
+    // 躯干
+    this._addPart('torso',
+      new THREE.BoxGeometry(torsoW, torsoH, torsoD), clothMat,
+      new CANNON.Box(new CANNON.Vec3(torsoW / 2, torsoH / 2, torsoD / 2)), 4,
+      [x, yTorso, z], 'torso');
+    // 骨盆
+    this._addPart('pelvis',
+      new THREE.BoxGeometry(pelvisW, pelvisH, pelvisD), clothMat,
+      new CANNON.Box(new CANNON.Vec3(pelvisW / 2, pelvisH / 2, pelvisD / 2)), 3,
+      [x, yPelvis, z], 'pelvis');
+    // 上臂左右
+    this._addPart('uarmL',
+      new THREE.CylinderGeometry(uarmR, uarmR * 0.9, uarmH), skinMat,
+      new CANNON.Cylinder(uarmR, uarmR * 0.9, uarmH, 8), 0.7,
+      [x - torsoW / 2 - uarmR, yUarm, z], 'uarm');
+    this._addPart('uarmR',
+      new THREE.CylinderGeometry(uarmR, uarmR * 0.9, uarmH), skinMat,
+      new CANNON.Cylinder(uarmR, uarmR * 0.9, uarmH, 8), 0.7,
+      [x + torsoW / 2 + uarmR, yUarm, z], 'uarm');
+    // 前臂
+    this._addPart('larmL',
+      new THREE.CylinderGeometry(larmR, larmR * 0.85, larmH), skinMat,
+      new CANNON.Cylinder(larmR, larmR * 0.85, larmH, 8), 0.5,
+      [x - torsoW / 2 - uarmR, yLarm, z], 'larm');
+    this._addPart('larmR',
+      new THREE.CylinderGeometry(larmR, larmR * 0.85, larmH), skinMat,
+      new CANNON.Cylinder(larmR, larmR * 0.85, larmH, 8), 0.5,
+      [x + torsoW / 2 + uarmR, yLarm, z], 'larm');
+    // 大腿
+    this._addPart('ulegL',
+      new THREE.CylinderGeometry(ulegR, ulegR * 0.85, ulegH), clothMat,
+      new CANNON.Cylinder(ulegR, ulegR * 0.85, ulegH, 8), 1.2,
+      [x - 0.1, yUleg, z], 'uleg');
+    this._addPart('ulegR',
+      new THREE.CylinderGeometry(ulegR, ulegR * 0.85, ulegH), clothMat,
+      new CANNON.Cylinder(ulegR, ulegR * 0.85, ulegH, 8), 1.2,
+      [x + 0.1, yUleg, z], 'uleg');
+    // 小腿
+    this._addPart('llegL',
+      new THREE.CylinderGeometry(llegR, llegR * 0.8, llegH), bootMat,
+      new CANNON.Cylinder(llegR, llegR * 0.8, llegH, 8), 0.9,
+      [x - 0.1, yLleg, z], 'lleg');
+    this._addPart('llegR',
+      new THREE.CylinderGeometry(llegR, llegR * 0.8, llegH), bootMat,
+      new CANNON.Cylinder(llegR, llegR * 0.8, llegH, 8), 0.9,
+      [x + 0.1, yLleg, z], 'lleg');
+
+    // 关节
+    // 头-躯干
+    this._connect(this.parts.head, this.parts.torso,
+      [0, -headR - 0.02, 0], [0, torsoH / 2 + 0.02, 0]);
+    // 躯干-骨盆
+    this._connect(this.parts.torso, this.parts.pelvis,
+      [0, -torsoH / 2, 0], [0, pelvisH / 2, 0]);
+    // 躯干-上臂
+    this._connect(this.parts.torso, this.parts.uarmL,
+      [-torsoW / 2 - 0.02, torsoH / 2 - uarmR, 0], [0, uarmH / 2, 0]);
+    this._connect(this.parts.torso, this.parts.uarmR,
+      [torsoW / 2 + 0.02, torsoH / 2 - uarmR, 0], [0, uarmH / 2, 0]);
+    // 上臂-前臂
+    this._connect(this.parts.uarmL, this.parts.larmL,
+      [0, -uarmH / 2, 0], [0, larmH / 2, 0]);
+    this._connect(this.parts.uarmR, this.parts.larmR,
+      [0, -uarmH / 2, 0], [0, larmH / 2, 0]);
+    // 骨盆-大腿
+    this._connect(this.parts.pelvis, this.parts.ulegL,
+      [-0.1, -pelvisH / 2, 0], [0, ulegH / 2, 0]);
+    this._connect(this.parts.pelvis, this.parts.ulegR,
+      [0.1, -pelvisH / 2, 0], [0, ulegH / 2, 0]);
+    // 大腿-小腿
+    this._connect(this.parts.ulegL, this.parts.llegL,
+      [0, -ulegH / 2, 0], [0, llegH / 2, 0]);
+    this._connect(this.parts.ulegR, this.parts.llegR,
+      [0, -ulegH / 2, 0], [0, llegH / 2, 0]);
+
+    // 自身碰撞过滤
+    this.bodies.forEach(b => { b.collisionFilterGroup = 1 << (this.index + 1); b.collisionFilterMask = -1; });
+    // 同一玩家内部各部位互不碰撞
+    const grp = this.bodies[0].collisionFilterGroup;
+    this.bodies.forEach(b => { b.collisionFilterMask = ~grp; });
+
+    // 站立力(让 ragdoll 直立 — 在 torso 上施加扶正扭矩)
+    this.parts.torso.body.angularDamping = 0.8;
+    this.parts.pelvis.body.angularDamping = 0.8;
+
+    // 朝向初始
+    if (facing !== 0) {
+      const q = new CANNON.Quaternion();
+      q.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), facing);
+      this.bodies.forEach(b => {
+        const offset = b.position.vsub(new CANNON.Vec3(x, b.position.y, z));
+        const rotated = new CANNON.Vec3();
+        q.vmult(offset, rotated);
+        b.position.set(x + rotated.x, b.position.y, z + rotated.z);
+        b.quaternion = q.mult(b.quaternion);
+      });
+    }
+  }
+
+  _buildWeapon(x, z, facing) {
+    const w = this.weapon;
+    const grp = new THREE.Group();
+
+    if (w.isMace) {
+      // 钉耙:握把 + 球 + 钉刺
+      const grip = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, w.length * 0.7),
+        new THREE.MeshStandardMaterial({ color: w.gripColor })
+      );
+      grip.position.y = w.length * 0.35;
+      grp.add(grip);
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(w.width / 2, 12, 12),
+        new THREE.MeshStandardMaterial({ color: w.color, metalness: 0.6, roughness: 0.5 })
+      );
+      head.position.y = w.length * 0.7 + w.width / 2;
+      grp.add(head);
+      // 钉刺
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const sp = new THREE.Mesh(
+          new THREE.ConeGeometry(0.04, 0.12, 6),
+          new THREE.MeshStandardMaterial({ color: 0x808080 })
+        );
+        sp.position.set(Math.cos(a) * w.width / 2, w.length * 0.7 + w.width / 2, Math.sin(a) * w.width / 2);
+        sp.lookAt(sp.position.x * 2, sp.position.y, sp.position.z * 2);
+        sp.rotateX(Math.PI / 2);
+        grp.add(sp);
+      }
+    } else {
+      const blade = new THREE.Mesh(
+        new THREE.BoxGeometry(w.width, w.length * 0.78, w.depth),
+        new THREE.MeshStandardMaterial({ color: w.color, metalness: 0.9, roughness: 0.2 })
+      );
+      blade.position.y = w.length * 0.35;
+      grp.add(blade);
+      const guard = new THREE.Mesh(
+        new THREE.BoxGeometry(0.32, 0.06, 0.12),
+        new THREE.MeshStandardMaterial({ color: w.guardColor })
+      );
+      guard.position.y = -0.05;
+      grp.add(guard);
+      const grip = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.045, 0.045, w.length * 0.18),
+        new THREE.MeshStandardMaterial({ color: w.gripColor })
+      );
+      grip.position.y = -w.length * 0.13;
+      grp.add(grip);
+    }
+    grp.castShadow = true;
+    this.weaponMesh = grp;
+    this.game.scene.add(grp);
+
+    // 物理武器
+    const halfL = w.length / 2;
+    const shape = w.isMace
+      ? new CANNON.Sphere(w.width / 2)
+      : new CANNON.Box(new CANNON.Vec3(w.width / 2, w.length / 2, w.depth / 2));
+    this.weaponBody = new CANNON.Body({
+      mass: w.mass,
+      shape,
+      linearDamping: 0.1, angularDamping: 0.2,
+    });
+    this.weaponBody.userData = { type: 'weapon', player: this };
+    const handPart = this.parts.larmR.body;
+    this.weaponBody.position.set(handPart.position.x, handPart.position.y - 0.3, handPart.position.z);
+    this.game.world.addBody(this.weaponBody);
+    this.weaponBody.collisionFilterGroup = handPart.collisionFilterGroup;
+    this.weaponBody.collisionFilterMask = ~handPart.collisionFilterGroup; // 不撞自己
+
+    // 握剑约束:右前臂末端 ↔ 武器握把
+    const tipLocal = w.isMace ? new CANNON.Vec3(0, -halfL, 0) : new CANNON.Vec3(0, -halfL + 0.05, 0);
+    this.gripConstraint = new CANNON.PointToPointConstraint(
+      handPart, new CANNON.Vec3(0, -0.15, 0),
+      this.weaponBody, tipLocal,
+      80
+    );
+    this.game.world.addConstraint(this.gripConstraint);
+
+    // 盾牌(短剑专属)
+    if (w.hasShield) {
+      const shield = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.7, 0.06),
+        new THREE.MeshStandardMaterial({ color: 0x6a4a30, metalness: 0.4 })
+      );
+      shield.castShadow = true;
+      this.shieldMesh = shield;
+      this.game.scene.add(shield);
+      this.shieldBody = new CANNON.Body({
+        mass: 0.6,
+        shape: new CANNON.Box(new CANNON.Vec3(0.25, 0.35, 0.03)),
+        linearDamping: 0.2,
+      });
+      this.shieldBody.userData = { type: 'shield', player: this };
+      const handL = this.parts.larmL.body;
+      this.shieldBody.position.set(handL.position.x, handL.position.y - 0.3, handL.position.z + 0.1);
+      this.game.world.addBody(this.shieldBody);
+      this.shieldBody.collisionFilterGroup = handL.collisionFilterGroup;
+      this.shieldBody.collisionFilterMask = ~handL.collisionFilterGroup;
+      this.shieldConstraint = new CANNON.PointToPointConstraint(
+        handL, new CANNON.Vec3(0, -0.15, 0),
+        this.shieldBody, new CANNON.Vec3(0, 0.2, 0),
+        80
+      );
+      this.game.world.addConstraint(this.shieldConstraint);
+    }
+  }
+
+  // 输入应用
+  applyInput(dt) {
+    if (this.dead) return;
+
+    // 直立扭矩(让躯干维持竖直)
+    this._uprightTorque(this.parts.torso.body, 80, 8);
+    this._uprightTorque(this.parts.pelvis.body, 60, 6);
+    this._uprightTorque(this.parts.head.body, 30, 3);
+
+    // 朝向(yaw)
+    this.facing = this.input.yaw || 0;
+    this._applyYaw(this.parts.torso.body, this.facing, 50);
+    this._applyYaw(this.parts.pelvis.body, this.facing, 40);
+
+    // 移动(以骨盆+躯干水平速度)
+    const speed = this.input.sprint ? 6.5 : 4;
+    const cosY = Math.cos(this.facing), sinY = Math.sin(this.facing);
+    // 输入的 mvx/mvz 是相对角色坐标(z = forward, x = right)
+    const wantVx = this.input.mvx * cosY * speed + this.input.mvz * sinY * speed;
+    const wantVz = -this.input.mvx * sinY * speed + this.input.mvz * cosY * speed;
+    [this.parts.torso.body, this.parts.pelvis.body].forEach(b => {
+      b.velocity.x += (wantVx - b.velocity.x) * 0.3;
+      b.velocity.z += (wantVz - b.velocity.z) * 0.3;
+    });
+
+    // 跳跃(脚底接触地面 + 输入)
+    if (this.input.jump) {
+      const onGround = this.parts.llegL.body.position.y < 0.32 || this.parts.llegR.body.position.y < 0.32;
+      if (onGround) {
+        [this.parts.torso.body, this.parts.pelvis.body, this.parts.ulegL.body, this.parts.ulegR.body].forEach(b => {
+          b.velocity.y = 6;
+        });
+      }
+      this.input.jump = 0;
+    }
+
+    // 挥武器(左键)
+    const now = performance.now();
+    if (this.input.swing && (now - this.lastSwingTime) > this.weapon.cooldown) {
+      this.lastSwingTime = now;
+      this._doSwing();
+      sfx.swing();
+    }
+    this._maintainSwing(dt);
+
+    // 持续抓取力(右键持续吸附 — 由外部建立约束,这里只做朝向)
+  }
+
+  _uprightTorque(body, kP, kD) {
+    // 把刚体的 up 矢量拉回世界 +Y
+    const up = new CANNON.Vec3(0, 1, 0);
+    const localUp = new CANNON.Vec3(0, 1, 0);
+    const worldUp = new CANNON.Vec3();
+    body.quaternion.vmult(localUp, worldUp);
+    const torque = new CANNON.Vec3();
+    worldUp.cross(up, torque);
+    torque.scale(kP, torque);
+    // 阻尼
+    body.angularVelocity.x *= (1 - kD * 0.01);
+    body.angularVelocity.z *= (1 - kD * 0.01);
+    body.applyTorque(torque);
+  }
+
+  _applyYaw(body, targetYaw, kP) {
+    // 简单 yaw 控制:计算当前 yaw 与目标差值,施加 y 轴扭矩
+    const e = body.quaternion;
+    const cur = Math.atan2(2 * (e.w * e.y + e.x * e.z), 1 - 2 * (e.y * e.y + e.x * e.x));
+    let diff = targetYaw - cur;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    body.applyTorque(new CANNON.Vec3(0, diff * kP, 0));
+    body.angularVelocity.y *= 0.85;
+  }
+
+  _doSwing() {
+    // 给武器一个朝前下方的冲击速度
+    const f = this.weapon.swingForce;
+    const cosY = Math.cos(this.facing), sinY = Math.sin(this.facing);
+    const fwd = new CANNON.Vec3(sinY, 0, cosY);
+    const impulse = new CANNON.Vec3(fwd.x * f * 0.15, f * 0.05, fwd.z * f * 0.15);
+    this.weaponBody.applyImpulse(impulse, new CANNON.Vec3(0, this.weapon.length / 2, 0));
+    this.weaponBody.angularVelocity.x += -fwd.z * 12;
+    this.weaponBody.angularVelocity.z += fwd.x * 12;
+  }
+
+  _maintainSwing(dt) {
+    // 让武器尖端朝目标方向
+    const cosY = Math.cos(this.facing), sinY = Math.sin(this.facing);
+    const handPos = this.parts.larmR.body.position;
+    const target = new CANNON.Vec3(
+      handPos.x + sinY * 1.0,
+      handPos.y + 0.5,
+      handPos.z + cosY * 1.0,
+    );
+    const tipLocal = new CANNON.Vec3(0, this.weapon.length / 2, 0);
+    const tipWorld = new CANNON.Vec3();
+    this.weaponBody.pointToWorldFrame(tipLocal, tipWorld);
+    const force = target.vsub(tipWorld).scale(this.weapon.returnForce);
+    this.weaponBody.applyForce(force, tipWorld);
+  }
+
+  // 抓取(需求 7)
+  tryGrab() {
+    if (this.grabConstraint || this.dead) return;
+    const handPart = this.parts.larmL.body; // 左手抓
+    const handPos = handPart.position;
+    const target = this.game.players[1 - this.index];
+    if (!target || target.dead) return;
+    let nearest = null, minDist = 1.2; // 最大抓取范围
+    Object.values(target.parts).forEach(p => {
+      const d = p.body.position.distanceTo(handPos);
+      if (d < minDist) { minDist = d; nearest = p; }
+    });
+    if (nearest) {
+      this.grabbedTarget = nearest;
+      const localOnTarget = new CANNON.Vec3();
+      const worldHand = new CANNON.Vec3(handPos.x, handPos.y, handPos.z);
+      nearest.body.pointToLocalFrame(worldHand, localOnTarget);
+      this.grabConstraint = new CANNON.PointToPointConstraint(
+        handPart, new CANNON.Vec3(0, -0.15, 0),
+        nearest.body, localOnTarget,
+        200
+      );
+      this.game.world.addConstraint(this.grabConstraint);
+      sfx.grunt();
+    }
+  }
+  releaseGrab() {
+    if (this.grabConstraint) {
+      try { this.game.world.removeConstraint(this.grabConstraint); } catch (e) {}
+      this.grabConstraint = null;
+      this.grabbedTarget = null;
+    }
+  }
+
+  takeDamage(amount, partType, hitPoint, sourceVel) {
+    const now = performance.now();
+    this.lastDamageByPart[partType] = this.lastDamageByPart[partType] || 0;
+    if (now - this.lastDamageByPart[partType] < 220) return;
+    this.lastDamageByPart[partType] = now;
+
+    const mult = PART_MULT[partType] || 1.0;
+    const dmg = amount * mult;
+    this.hp = Math.max(0, this.hp - dmg);
+
+    // 流血粒子
+    const dir = sourceVel ? new THREE.Vector3(sourceVel.x, sourceVel.y, sourceVel.z).normalize() : new THREE.Vector3(0, 1, 0);
+    this.game.blood.spawn(new THREE.Vector3(hitPoint.x, hitPoint.y, hitPoint.z), dir, 14, Math.min(2, dmg / 10));
+    // 音效
+    sfx.hit(Math.min(2, dmg / 15));
+    sfx.grunt();
+    // 红屏(只在自己被打时闪)
+    if (this === game.players[myIndex]) flashBlood();
+
+    // 击退
+    if (hitPoint) {
+      const part = Object.values(this.parts).find(p => p.partType === partType);
+      if (part) {
+        const push = new CANNON.Vec3(
+          (part.body.position.x - hitPoint.x),
+          0.5,
+          (part.body.position.z - hitPoint.z)
+        );
+        push.normalize();
+        push.scale(dmg * 0.3, push);
+        part.body.applyImpulse(push, part.body.position);
+      }
+    }
+
+    if (this.hp <= 0) this._die();
+    updateHUD();
+  }
+
+  _die() {
+    this.dead = true;
+    // 解除握武器约束 → 武器掉落
+    try { this.game.world.removeConstraint(this.gripConstraint); } catch (e) {}
+    if (this.shieldConstraint) try { this.game.world.removeConstraint(this.shieldConstraint); } catch (e) {}
+    if (this.grabConstraint) try { this.game.world.removeConstraint(this.grabConstraint); } catch (e) {}
+    // 让所有部位自由翻滚
+    this.bodies.forEach(b => { b.angularDamping = 0.2; });
+  }
+
+  syncMesh() {
+    Object.values(this.parts).forEach(p => {
+      p.mesh.position.copy(p.body.position);
+      p.mesh.quaternion.copy(p.body.quaternion);
+    });
+    this.weaponMesh.position.copy(this.weaponBody.position);
+    this.weaponMesh.quaternion.copy(this.weaponBody.quaternion);
+    if (this.shieldMesh) {
+      this.shieldMesh.position.copy(this.shieldBody.position);
+      this.shieldMesh.quaternion.copy(this.shieldBody.quaternion);
+    }
+  }
+}
+
+// ==========================================================
+// Game
 // ==========================================================
 class Game {
   constructor() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x1a2030);
-    this.scene.fog = new THREE.Fog(0x1a2030, 15, 50);
-
-    this.camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 200);
-    this.camera.position.set(0, 8, 14);
-    this.camera.lookAt(0, 1, 0);
-
+    this.camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 200);
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
     document.body.appendChild(this.renderer.domElement);
-
     addEventListener('resize', () => {
       this.camera.aspect = innerWidth / innerHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(innerWidth, innerHeight);
     });
 
-    // 光照
-    const hemi = new THREE.HemisphereLight(0xb0c8ff, 0x202830, 0.6);
-    this.scene.add(hemi);
-    const dir = new THREE.DirectionalLight(0xffe8c0, 1.0);
-    dir.position.set(8, 14, 6);
-    dir.castShadow = true;
-    dir.shadow.mapSize.set(1024, 1024);
-    dir.shadow.camera.left = -15; dir.shadow.camera.right = 15;
-    dir.shadow.camera.top = 15; dir.shadow.camera.bottom = -15;
-    this.scene.add(dir);
+    // 光
+    this.scene.add(new THREE.HemisphereLight(0xffd0a0, 0x201008, 0.45));
+    const sun = new THREE.DirectionalLight(0xffe0b0, 0.9);
+    sun.position.set(8, 16, 5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.camera.left = -16; sun.shadow.camera.right = 16;
+    sun.shadow.camera.top = 16; sun.shadow.camera.bottom = -16;
+    this.scene.add(sun);
 
     // 物理世界
-    this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -20, 0) });
+    this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -22, 0) });
     this.world.broadphase = new CANNON.SAPBroadphase(this.world);
-    this.world.solver.iterations = 12;
-    this.world.defaultContactMaterial.friction = 0.4;
-    this.world.defaultContactMaterial.restitution = 0.1;
+    this.world.solver.iterations = 14;
+    this.world.defaultContactMaterial.friction = 0.5;
+    this.world.defaultContactMaterial.restitution = 0.05;
 
-    this.buildArena();
+    buildArena(this.scene, this.world);
 
-    this.players = [null, null]; // 0: 红, 1: 蓝
+    this.players = [null, null];
     this.collisionEvents = [];
     this.world.addEventListener('beginContact', (ev) => {
-      this.collisionEvents.push({ a: ev.bodyA, b: ev.bodyB, contact: ev.contact });
+      this.collisionEvents.push({ a: ev.bodyA, b: ev.bodyB });
     });
 
-    this.localIndex = 0; // 我是哪一方
-    this.acc = 0;
+    this.blood = new BloodSystem(this.scene);
     this.lastTime = performance.now();
+    this.acc = 0;
+    this._cam = null;
   }
 
-  buildArena() {
-    // 地面
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x3a4050, roughness: 0.9 });
-    const groundGeo = new THREE.CircleGeometry(ARENA_SIZE / 2, 64);
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    this.scene.add(ground);
-
-    // 网格纹理
-    const grid = new THREE.GridHelper(ARENA_SIZE, 20, 0x4a5468, 0x2a3040);
-    grid.position.y = 0.01;
-    this.scene.add(grid);
-
-    // 物理地面
-    const groundBody = new CANNON.Body({ mass: 0, shape: new CANNON.Plane() });
-    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-    groundBody.userData = { type: 'ground' };
-    this.world.addBody(groundBody);
-
-    // 围栏（不可见墙）
-    const wallShape = new CANNON.Box(new CANNON.Vec3(ARENA_SIZE / 2, 3, 0.5));
-    const positions = [
-      [0, 3, ARENA_SIZE / 2], [0, 3, -ARENA_SIZE / 2],
-    ];
-    positions.forEach((p) => {
-      const b = new CANNON.Body({ mass: 0, shape: wallShape });
-      b.position.set(...p);
-      this.world.addBody(b);
-    });
-    const wallShape2 = new CANNON.Box(new CANNON.Vec3(0.5, 3, ARENA_SIZE / 2));
-    [[ARENA_SIZE / 2, 3, 0], [-ARENA_SIZE / 2, 3, 0]].forEach((p) => {
-      const b = new CANNON.Body({ mass: 0, shape: wallShape2 });
-      b.position.set(...p);
-      this.world.addBody(b);
-    });
-
-    // 装饰柱
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * Math.PI * 2;
-      const r = ARENA_SIZE / 2 - 0.3;
-      const px = Math.cos(a) * r, pz = Math.sin(a) * r;
-      const torch = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.12, 0.12, 2.4),
-        new THREE.MeshStandardMaterial({ color: 0x4a3020 })
-      );
-      torch.position.set(px, 1.2, pz);
-      torch.castShadow = true;
-      this.scene.add(torch);
-      const fire = new THREE.PointLight(0xff8030, 1.2, 8);
-      fire.position.set(px, 2.5, pz);
-      this.scene.add(fire);
-      const ball = new THREE.Mesh(
-        new THREE.SphereGeometry(0.18, 12, 12),
-        new THREE.MeshBasicMaterial({ color: 0xffaa40 })
-      );
-      ball.position.copy(fire.position);
-      this.scene.add(ball);
-    }
-  }
-
-  spawnPlayer(index, color) {
-    const p = new Player(this, index, color);
-    this.players[index] = p;
-    return p;
+  spawn(weaponKeys) {
+    this.players[0] = new Player(this, 0, 0xb04040, weaponKeys[0]);
+    this.players[1] = new Player(this, 1, 0x4070b0, weaponKeys[1]);
   }
 }
 
 // ==========================================================
-// 玩家（简化 ragdoll：身体 + 手臂 + 武器）
+// 主流程
 // ==========================================================
-class Player {
-  constructor(game, index, color) {
-    this.game = game;
-    this.index = index;
-    this.color = color;
-    this.hp = MAX_HP;
-    this.dead = false;
-
-    const startX = index === 0 ? -4 : 4;
-    const facing = index === 0 ? 1 : -1;
-
-    // 身体（胶囊近似：球+圆柱+球）
-    const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.2 });
-    this.bodyMesh = new THREE.Group();
-    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.45, 1.0, 8, 16), bodyMat);
-    torso.castShadow = true;
-    this.bodyMesh.add(torso);
-    const head = new THREE.Mesh(
-      new THREE.SphereGeometry(0.32, 16, 16),
-      new THREE.MeshStandardMaterial({ color: 0xf0d090 })
-    );
-    head.position.y = 1.0;
-    head.castShadow = true;
-    this.bodyMesh.add(head);
-    // 简易脸
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000 });
-    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.04), eyeMat);
-    const eyeR = eyeL.clone();
-    eyeL.position.set(-0.1, 1.05, 0.28); eyeR.position.set(0.1, 1.05, 0.28);
-    this.bodyMesh.add(eyeL, eyeR);
-    game.scene.add(this.bodyMesh);
-
-    // 物理身体
-    this.body = new CANNON.Body({
-      mass: 5,
-      shape: new CANNON.Sphere(0.6),
-      position: new CANNON.Vec3(startX, 1.2, 0),
-      linearDamping: 0.5,
-      angularDamping: 0.9,
-    });
-    this.body.fixedRotation = true;
-    this.body.updateMassProperties();
-    this.body.userData = { type: 'player', player: this };
-    game.world.addBody(this.body);
-
-    // 武器（剑）— 物理刚体由"手"持
-    const swordLen = 1.4;
-    this.swordLen = swordLen;
-    const swordGeo = new THREE.Group();
-    const blade = new THREE.Mesh(
-      new THREE.BoxGeometry(0.06, swordLen, 0.18),
-      new THREE.MeshStandardMaterial({ color: 0xdde4ee, metalness: 0.9, roughness: 0.2 })
-    );
-    blade.position.y = swordLen / 2 + 0.1;
-    blade.castShadow = true;
-    const guard = new THREE.Mesh(
-      new THREE.BoxGeometry(0.32, 0.06, 0.1),
-      new THREE.MeshStandardMaterial({ color: 0x806030 })
-    );
-    guard.position.y = 0.1;
-    const grip = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.05, 0.05, 0.25),
-      new THREE.MeshStandardMaterial({ color: 0x402010 })
-    );
-    grip.position.y = -0.05;
-    swordGeo.add(blade, guard, grip);
-    this.swordMesh = swordGeo;
-    game.scene.add(this.swordMesh);
-
-    this.swordBody = new CANNON.Body({
-      mass: 1.2,
-      shape: new CANNON.Box(new CANNON.Vec3(0.05, swordLen / 2, 0.1)),
-      linearDamping: 0.1,
-      angularDamping: 0.2,
-    });
-    this.swordBody.userData = { type: 'sword', player: this };
-    this.swordBody.position.set(startX + 0.6 * facing, 1.4, 0);
-    game.world.addBody(this.swordBody);
-
-    // 用 PointToPoint 约束模拟"手握剑"
-    this.handAnchor = new CANNON.Vec3(0.5 * facing, 0.2, 0); // 相对身体的"手"位置
-    this.swordGripLocal = new CANNON.Vec3(0, -swordLen / 2, 0); // 相对剑的握把
-    this.gripConstraint = new CANNON.PointToPointConstraint(
-      this.body, this.handAnchor,
-      this.swordBody, this.swordGripLocal,
-      40 // 最大力，砍到硬物会脱手
-    );
-    game.world.addConstraint(this.gripConstraint);
-
-    // 输入状态（远端通过网络更新）
-    this.input = { mx: 0, my: 0, mvx: 0, mvz: 0, jump: 0, sprint: 0, swing: 0, swingDX: 0, swingDY: 0 };
-    this.swingTimer = 0;
-    this.swingTarget = new CANNON.Vec3();
-    this.lastDamageTime = 0;
-  }
-
-  applyInput(dt) {
-    if (this.dead) return;
-    const speed = this.input.sprint ? 7 : 4;
-    const v = this.body.velocity;
-    v.x = this.input.mvx * speed;
-    v.z = this.input.mvz * speed;
-    if (this.input.jump && Math.abs(v.y) < 0.05) {
-      v.y = 8;
-      this.input.jump = 0;
-    }
-    // 朝向
-    const facing = this.index === 0 ? 1 : -1;
-    // 让身体始终面向另一方
-    const other = this.game.players[1 - this.index];
-    if (other) {
-      const dx = other.body.position.x - this.body.position.x;
-      const dz = other.body.position.z - this.body.position.z;
-      this.bodyFacing = Math.atan2(dx, dz);
-    }
-
-    // 剑挥动：根据鼠标增量给剑施加扭矩 + 拉力
-    if (this.input.swing) {
-      const handWorld = new CANNON.Vec3();
-      this.body.pointToWorldFrame(this.handAnchor, handWorld);
-      // 目标点：手前方一段距离 + 鼠标偏移
-      const forward = new CANNON.Vec3(Math.sin(this.bodyFacing || 0), 0, Math.cos(this.bodyFacing || 0));
-      const right = new CANNON.Vec3(forward.z, 0, -forward.x);
-      const target = handWorld.vadd(forward.scale(1.2));
-      target.y += 1.0 - this.input.swingDY * 1.5; // 鼠标 Y 控制高低
-      target.vadd(right.scale(this.input.swingDX * 1.5), target);
-
-      // 把剑尖往 target 拉
-      const tipLocal = new CANNON.Vec3(0, this.swordLen / 2, 0);
-      const tipWorld = new CANNON.Vec3();
-      this.swordBody.pointToWorldFrame(tipLocal, tipWorld);
-      const force = target.vsub(tipWorld).scale(80);
-      this.swordBody.applyForce(force, tipWorld);
-    } else {
-      // 还原姿势
-      const handWorld = new CANNON.Vec3();
-      this.body.pointToWorldFrame(this.handAnchor, handWorld);
-      const target = handWorld.clone();
-      target.y += 0.6;
-      const tipLocal = new CANNON.Vec3(0, this.swordLen / 2, 0);
-      const tipWorld = new CANNON.Vec3();
-      this.swordBody.pointToWorldFrame(tipLocal, tipWorld);
-      const force = target.vsub(tipWorld).scale(15);
-      this.swordBody.applyForce(force, tipWorld);
-    }
-  }
-
-  syncMesh() {
-    this.bodyMesh.position.copy(this.body.position);
-    if (this.bodyFacing !== undefined) this.bodyMesh.rotation.y = this.bodyFacing;
-    this.swordMesh.position.copy(this.swordBody.position);
-    this.swordMesh.quaternion.copy(this.swordBody.quaternion);
-  }
-
-  takeDamage(amount, hitPoint) {
-    const now = performance.now();
-    if (now - this.lastDamageTime < 250) return; // 冷却避免连帧
-    this.lastDamageTime = now;
-    this.hp = Math.max(0, this.hp - amount);
-    // 击退
-    if (hitPoint) {
-      const dir = this.body.position.vsub(hitPoint);
-      dir.y = 0; dir.normalize();
-      this.body.velocity.x += dir.x * 4;
-      this.body.velocity.z += dir.z * 4;
-      this.body.velocity.y += 2;
-    }
-    if (this.hp <= 0) {
-      this.dead = true;
-      // 倒下：解除握剑
-      try { this.game.world.removeConstraint(this.gripConstraint); } catch (e) {}
-      this.body.fixedRotation = false;
-      this.body.updateMassProperties();
-      this.body.angularVelocity.set(Math.random() * 4, 0, Math.random() * 4);
-    }
-    updateHUD();
-  }
-}
-
-// ==========================================================
-// 全局
-// ==========================================================
+const $ = id => document.getElementById(id);
 const game = new Game();
 const net = new Net();
-let myIndex = 0; // 0 = 房主红方, 1 = 访客蓝方
-let gameStarted = false;
+let myIndex = 0;
+let started = false;
+let pointerLocked = false;
+let yaw = 0; // 我方角色 yaw
+let camPitch = -0.2;
 
-// 创建两个玩家
-game.spawnPlayer(0, 0xc04040);
-game.spawnPlayer(1, 0x4080d0);
-
-// ==========================================================
-// 输入采集（仅本地玩家）
-// ==========================================================
+// 输入采集
 const keys = {};
-addEventListener('keydown', (e) => { keys[e.code] = true; });
-addEventListener('keyup', (e) => { keys[e.code] = false; });
+addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Escape') document.exitPointerLock?.(); });
+addEventListener('keyup', e => { keys[e.code] = false; });
 
-let mouseDown = false, lastMX = 0, lastMY = 0, swingDX = 0, swingDY = 0;
-addEventListener('mousedown', (e) => {
-  if (e.button === 0) { mouseDown = true; lastMX = e.clientX; lastMY = e.clientY; }
-});
-addEventListener('mouseup', (e) => {
-  if (e.button === 0) { mouseDown = false; swingDX = 0; swingDY = 0; }
-});
-addEventListener('mousemove', (e) => {
-  if (mouseDown) {
-    swingDX = (e.clientX - innerWidth / 2) / (innerWidth / 2);
-    swingDY = (e.clientY - innerHeight / 2) / (innerHeight / 2);
+let leftDown = false, rightDown = false;
+addEventListener('mousedown', e => {
+  if (!started) return;
+  if (e.button === 0) leftDown = true;
+  if (e.button === 2) {
+    rightDown = true;
+    // 立即尝试本地抓取(房主权威,所以非房主只是给本地视觉)
+    if (net.isHost && myIndex === 0) game.players[0].tryGrab();
+    else if (!net.isHost && myIndex === 1) game.players[1].tryGrab();
   }
 });
+addEventListener('mouseup', e => {
+  if (e.button === 0) leftDown = false;
+  if (e.button === 2) {
+    rightDown = false;
+    if (net.isHost && myIndex === 0) game.players[0].releaseGrab();
+    else if (!net.isHost && myIndex === 1) game.players[1].releaseGrab();
+  }
+});
+addEventListener('contextmenu', e => e.preventDefault());
+addEventListener('mousemove', e => {
+  if (!pointerLocked) return;
+  yaw -= e.movementX * 0.0025;
+  camPitch -= e.movementY * 0.0025;
+  camPitch = Math.max(-0.7, Math.min(0.4, camPitch));
+});
 
-function gatherLocalInput() {
-  const me = game.players[myIndex];
-  if (!me) return null;
-  let mvx = 0, mvz = 0;
-  // 视角是固定俯视的，所以 WASD 是世界坐标
-  if (keys['KeyW']) mvz -= 1;
-  if (keys['KeyS']) mvz += 1;
-  if (keys['KeyA']) mvx -= 1;
-  if (keys['KeyD']) mvx += 1;
-  // 蓝方反转方向以匹配视角
-  if (myIndex === 1) { mvx = -mvx; mvz = -mvz; }
-  const len = Math.hypot(mvx, mvz);
-  if (len > 0) { mvx /= len; mvz /= len; }
-  return {
-    mvx, mvz,
-    jump: keys['Space'] ? 1 : 0,
-    sprint: keys['ShiftLeft'] || keys['ShiftRight'] ? 1 : 0,
-    swing: mouseDown ? 1 : 0,
-    swingDX: myIndex === 1 ? -swingDX : swingDX,
-    swingDY,
-  };
+function lockPointer() {
+  game.renderer.domElement.requestPointerLock?.();
 }
+document.addEventListener('pointerlockchange', () => {
+  pointerLocked = document.pointerLockElement === game.renderer.domElement;
+});
+document.addEventListener('click', () => { if (started && !pointerLocked) lockPointer(); });
 
-// ==========================================================
-// 同步协议
-// 房主权威：物理在房主跑，访客发送 input，房主广播 state
-// ==========================================================
-function startGame() {
-  if (gameStarted) return;
-  gameStarted = true;
-  document.getElementById('lobby').classList.add('hidden');
-  document.getElementById('hud').classList.remove('hidden');
-  document.getElementById('tips').classList.remove('hidden');
-  updateHUD();
-  requestAnimationFrame(loop);
+function flashBlood() {
+  const el = $('blood-overlay');
+  el.classList.add('hit');
+  clearTimeout(flashBlood._t);
+  flashBlood._t = setTimeout(() => el.classList.remove('hit'), 180);
 }
 
 function updateHUD() {
   const p1 = game.players[0], p2 = game.players[1];
-  document.getElementById('p1-hp').style.width = (p1.hp / MAX_HP * 100) + '%';
-  document.getElementById('p2-hp').style.width = (p2.hp / MAX_HP * 100) + '%';
-  document.getElementById('p1-name').textContent = '红方' + (myIndex === 0 ? ' (你)' : '');
-  document.getElementById('p2-name').textContent = '蓝方' + (myIndex === 1 ? ' (你)' : '');
-
+  if (!p1 || !p2) return;
+  $('p1-hp').style.width = (p1.hp / MAX_HP * 100) + '%';
+  $('p2-hp').style.width = (p2.hp / MAX_HP * 100) + '%';
+  $('p1-name').textContent = '红方斗士' + (myIndex === 0 ? ' (你)' : '');
+  $('p2-name').textContent = '蓝方斗士' + (myIndex === 1 ? ' (你)' : '');
+  $('p1-weapon').textContent = '武器:' + p1.weapon.name;
+  $('p2-weapon').textContent = '武器:' + p2.weapon.name;
   if (p1.dead || p2.dead) {
-    const win = p1.dead ? '蓝方' : '红方';
     const meWin = (p1.dead && myIndex === 1) || (p2.dead && myIndex === 0);
-    document.getElementById('result-text').textContent = meWin ? 'VICTORY' : 'DEFEAT';
-    document.getElementById('result-text').style.color = meWin ? '#f0d890' : '#c04040';
-    document.getElementById('result').style.display = 'flex';
+    $('result-text').textContent = meWin ? 'VICTORY' : 'DEFEAT';
+    $('result-text').style.color = meWin ? '#f0d890' : '#c04040';
+    $('result').style.display = 'flex';
+    document.exitPointerLock?.();
   }
 }
 
-net.onData = (msg) => {
-  if (!msg) return;
-  if (msg.t === 'input') {
-    // 房主收到访客输入
-    const p = game.players[1];
-    if (p) p.input = msg.d;
-  } else if (msg.t === 'state') {
-    // 访客收到房主权威状态
-    applyAuthState(msg.d);
-  }
-};
+function gatherInput() {
+  let mvx = 0, mvz = 0;
+  if (keys['KeyW']) mvz += 1;
+  if (keys['KeyS']) mvz -= 1;
+  if (keys['KeyA']) mvx -= 1;
+  if (keys['KeyD']) mvx += 1;
+  const len = Math.hypot(mvx, mvz);
+  if (len > 0) { mvx /= len; mvz /= len; }
+  return {
+    mvx, mvz, yaw,
+    jump: keys['Space'] ? 1 : 0,
+    sprint: keys['ShiftLeft'] || keys['ShiftRight'] ? 1 : 0,
+    swing: leftDown ? 1 : 0,
+    grab: rightDown ? 1 : 0,
+  };
+}
 
-function applyAuthState(s) {
-  for (let i = 0; i < 2; i++) {
-    const p = game.players[i];
-    const ps = s.players[i];
-    p.body.position.set(ps.bx, ps.by, ps.bz);
-    p.body.velocity.set(ps.bvx, ps.bvy, ps.bvz);
-    p.body.quaternion.set(ps.bqx, ps.bqy, ps.bqz, ps.bqw);
-    p.swordBody.position.set(ps.sx, ps.sy, ps.sz);
-    p.swordBody.quaternion.set(ps.sqx, ps.sqy, ps.sqz, ps.sqw);
-    p.swordBody.velocity.set(ps.svx, ps.svy, ps.svz);
-    p.swordBody.angularVelocity.set(ps.savx, ps.savy, ps.savz);
-    p.bodyFacing = ps.f;
-    if (p.hp !== ps.hp) {
-      p.hp = ps.hp;
-      if (ps.hp <= 0 && !p.dead) {
-        p.dead = true;
-        try { game.world.removeConstraint(p.gripConstraint); } catch (e) {}
-        p.body.fixedRotation = false;
-        p.body.updateMassProperties();
-      }
+// =========== 同步 ===========
+function snapshot() {
+  return {
+    players: game.players.map(p => ({
+      hp: p.hp, dead: p.dead, facing: p.facing,
+      bodies: p.bodies.map(b => ({
+        x: b.position.x, y: b.position.y, z: b.position.z,
+        qx: b.quaternion.x, qy: b.quaternion.y, qz: b.quaternion.z, qw: b.quaternion.w,
+        vx: b.velocity.x, vy: b.velocity.y, vz: b.velocity.z,
+        avx: b.angularVelocity.x, avy: b.angularVelocity.y, avz: b.angularVelocity.z,
+      })),
+      weapon: {
+        x: p.weaponBody.position.x, y: p.weaponBody.position.y, z: p.weaponBody.position.z,
+        qx: p.weaponBody.quaternion.x, qy: p.weaponBody.quaternion.y, qz: p.weaponBody.quaternion.z, qw: p.weaponBody.quaternion.w,
+        vx: p.weaponBody.velocity.x, vy: p.weaponBody.velocity.y, vz: p.weaponBody.velocity.z,
+        avx: p.weaponBody.angularVelocity.x, avy: p.weaponBody.angularVelocity.y, avz: p.weaponBody.angularVelocity.z,
+      },
+      shield: p.shieldBody ? {
+        x: p.shieldBody.position.x, y: p.shieldBody.position.y, z: p.shieldBody.position.z,
+        qx: p.shieldBody.quaternion.x, qy: p.shieldBody.quaternion.y, qz: p.shieldBody.quaternion.z, qw: p.shieldBody.quaternion.w,
+      } : null,
+    })),
+  };
+}
+function applySnap(s) {
+  s.players.forEach((ps, i) => {
+    const p = game.players[i]; if (!p) return;
+    p.hp = ps.hp; p.facing = ps.facing;
+    if (ps.dead && !p.dead) p._die();
+    ps.bodies.forEach((bs, j) => {
+      const b = p.bodies[j]; if (!b) return;
+      b.position.set(bs.x, bs.y, bs.z);
+      b.quaternion.set(bs.qx, bs.qy, bs.qz, bs.qw);
+      b.velocity.set(bs.vx, bs.vy, bs.vz);
+      b.angularVelocity.set(bs.avx, bs.avy, bs.avz);
+    });
+    p.weaponBody.position.set(ps.weapon.x, ps.weapon.y, ps.weapon.z);
+    p.weaponBody.quaternion.set(ps.weapon.qx, ps.weapon.qy, ps.weapon.qz, ps.weapon.qw);
+    p.weaponBody.velocity.set(ps.weapon.vx, ps.weapon.vy, ps.weapon.vz);
+    p.weaponBody.angularVelocity.set(ps.weapon.avx, ps.weapon.avy, ps.weapon.avz);
+    if (p.shieldBody && ps.shield) {
+      p.shieldBody.position.set(ps.shield.x, ps.shield.y, ps.shield.z);
+      p.shieldBody.quaternion.set(ps.shield.qx, ps.shield.qy, ps.shield.qz, ps.shield.qw);
     }
-  }
+  });
   updateHUD();
 }
 
-function snapshotState() {
-  const players = game.players.map(p => ({
-    bx: p.body.position.x, by: p.body.position.y, bz: p.body.position.z,
-    bvx: p.body.velocity.x, bvy: p.body.velocity.y, bvz: p.body.velocity.z,
-    bqx: p.body.quaternion.x, bqy: p.body.quaternion.y, bqz: p.body.quaternion.z, bqw: p.body.quaternion.w,
-    sx: p.swordBody.position.x, sy: p.swordBody.position.y, sz: p.swordBody.position.z,
-    sqx: p.swordBody.quaternion.x, sqy: p.swordBody.quaternion.y, sqz: p.swordBody.quaternion.z, sqw: p.swordBody.quaternion.w,
-    svx: p.swordBody.velocity.x, svy: p.swordBody.velocity.y, svz: p.swordBody.velocity.z,
-    savx: p.swordBody.angularVelocity.x, savy: p.swordBody.angularVelocity.y, savz: p.swordBody.angularVelocity.z,
-    f: p.bodyFacing || 0,
-    hp: p.hp,
-  }));
-  return { players };
+net.onData = msg => {
+  if (!msg) return;
+  if (msg.t === 'init') {
+    // 房主 → 访客:武器分配
+    pendingInit = msg.d;
+    if (!started) tryStart();
+  } else if (msg.t === 'input') {
+    const p = game.players[1]; if (!p) return;
+    const prevGrab = p.input.grab;
+    p.input = msg.d;
+    if (msg.d.grab && !prevGrab) p.tryGrab();
+    if (!msg.d.grab && prevGrab) p.releaseGrab();
+  } else if (msg.t === 'state') {
+    applySnap(msg.d);
+  } else if (msg.t === 'fx') {
+    // 命中特效广播(简化:伤害已包含在 state 里,这里不必再做)
+  }
+};
+
+let pendingInit = null;
+function tryStart() {
+  if (started || !pendingInit) return;
+  started = true;
+  game.spawn(pendingInit.weapons);
+  $('lobby').classList.add('hidden');
+  $('hud').classList.remove('hidden');
+  $('tips').classList.remove('hidden');
+  $('crosshair').classList.remove('hidden');
+  updateHUD();
+  setTimeout(() => lockPointer(), 200);
+  requestAnimationFrame(loop);
 }
 
-// ==========================================================
-// 主循环
-// ==========================================================
-let stateSendTimer = 0;
+// =========== 伤害判定(房主权威) ===========
+function processCollisions() {
+  for (const ev of game.collisionEvents) {
+    const ua = ev.a.userData, ub = ev.b.userData;
+    if (!ua || !ub) continue;
+    let weapon = null, victim = null, victimBody = null;
+    if (ua.type === 'weapon' && ub.type === 'part') { weapon = ua.player; victim = ub.player; victimBody = ev.b; }
+    else if (ub.type === 'weapon' && ua.type === 'part') { weapon = ub.player; victim = ua.player; victimBody = ev.a; }
+    if (!weapon || !victim || weapon === victim) continue;
+
+    const v = weapon.weaponBody.velocity;
+    const av = weapon.weaponBody.angularVelocity;
+    const speed = Math.hypot(v.x, v.y, v.z) + Math.hypot(av.x, av.y, av.z) * 0.5;
+    if (speed < 4) continue;
+    const partType = victimBody.userData.partType;
+    const baseDmg = Math.min(60, Math.max(6, speed * 2.8 * weapon.weapon.dmgMult));
+    victim.takeDamage(baseDmg, partType, weapon.weaponBody.position, v);
+  }
+  game.collisionEvents.length = 0;
+}
+
+// =========== 主循环 ===========
 function loop() {
   requestAnimationFrame(loop);
   const now = performance.now();
@@ -678,14 +1266,16 @@ function loop() {
   if (dt > 0.1) dt = 0.1;
   game.acc += dt;
 
-  // 本地输入
-  const localInput = gatherLocalInput();
-  if (localInput) {
+  const localInput = gatherInput();
+  const localP = game.players[myIndex];
+  if (localP) {
     if (net.isHost) {
-      game.players[0].input = localInput;
+      localP.input = localInput;
     } else {
-      game.players[1].input = localInput;
-      // 访客把输入发给房主
+      const prev = localP.input.grab;
+      localP.input = localInput;
+      if (localInput.grab && !prev) localP.tryGrab();
+      if (!localInput.grab && prev) localP.releaseGrab();
       net.send({ t: 'input', d: localInput });
     }
   }
@@ -693,87 +1283,65 @@ function loop() {
   while (game.acc >= FIXED_DT) {
     game.acc -= FIXED_DT;
     if (net.isHost) {
-      // 权威物理
       game.players.forEach(p => p.applyInput(FIXED_DT));
       game.world.step(FIXED_DT);
       processCollisions();
     } else {
-      // 访客只跑插值/本地输入响应（不跑物理，等服务器同步）
-      // 这里仍然跑一次以便剑剑碰撞视觉响应，但不发权威伤害
+      // 访客只本地预测(不做权威伤害)
       game.players.forEach(p => p.applyInput(FIXED_DT));
       game.world.step(FIXED_DT);
+      game.collisionEvents.length = 0;
     }
   }
 
-  // 主权威广播
-  if (net.isHost) {
-    stateSendTimer += dt;
-    if (stateSendTimer >= 1 / 30) {
-      stateSendTimer = 0;
-      net.send({ t: 'state', d: snapshotState() });
-    }
+  // 房主广播
+  game._sendAcc = (game._sendAcc || 0) + dt;
+  if (net.isHost && game._sendAcc >= 1 / 25) {
+    game._sendAcc = 0;
+    net.send({ t: 'state', d: snapshot() });
   }
 
-  // 同步可视
+  // 渲染同步
   game.players.forEach(p => p.syncMesh());
+  game.blood.update(dt);
 
-  // 摄像机跟随中点
-  const a = game.players[0].body.position, b = game.players[1].body.position;
-  const cx = (a.x + b.x) / 2, cz = (a.z + b.z) / 2;
-  const dist = Math.max(8, Math.hypot(a.x - b.x, a.z - b.z) + 6);
-  const sideSign = myIndex === 0 ? 1 : -1;
-  if (!loop._cam) loop._cam = { x: cx, z: cz + dist * sideSign, h: dist * 0.5 };
-  const cam = loop._cam;
-  const tcx = cx, tcz = cz + dist * 0.7 * sideSign, th = dist * 0.55 + 2;
-  cam.x += (tcx - cam.x) * 0.05;
-  cam.z += (tcz - cam.z) * 0.05;
-  cam.h += (th - cam.h) * 0.05;
-  game.camera.position.set(cam.x, cam.h, cam.z);
-  game.camera.lookAt(cx, 1, cz);
+  // 摄像机 — 第三人称(需求 1)
+  const me = game.players[myIndex];
+  if (me) {
+    const head = me.parts.head.body.position;
+    const dist = 3.6, height = 1.6;
+    const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+    const targetPos = new THREE.Vector3(
+      head.x - sinY * dist,
+      head.y + height + camPitch * 2,
+      head.z - cosY * dist,
+    );
+    if (!game._cam) game._cam = targetPos.clone();
+    game._cam.lerp(targetPos, 0.15);
+    game.camera.position.copy(game._cam);
+    const lookAt = new THREE.Vector3(head.x + sinY * 2, head.y + camPitch * 2, head.z + cosY * 2);
+    game.camera.lookAt(lookAt);
+  }
 
   game.renderer.render(game.scene, game.camera);
 }
 
-function processCollisions() {
-  for (const ev of game.collisionEvents) {
-    const ua = ev.a.userData, ub = ev.b.userData;
-    if (!ua || !ub) continue;
-    let sword = null, victim = null;
-    if (ua.type === 'sword' && ub.type === 'player') { sword = ua.player; victim = ub.player; }
-    else if (ub.type === 'sword' && ua.type === 'player') { sword = ub.player; victim = ua.player; }
-    if (sword && victim && sword !== victim) {
-      // 用剑速度计算伤害
-      const v = sword.swordBody.velocity;
-      const av = sword.swordBody.angularVelocity;
-      const speed = Math.hypot(v.x, v.y, v.z) + Math.hypot(av.x, av.y, av.z) * 0.5;
-      if (speed > 4) {
-        const dmg = Math.min(40, Math.max(5, speed * 2.5));
-        const hit = sword.swordBody.position;
-        victim.takeDamage(dmg, hit);
-      }
-    }
-  }
-  game.collisionEvents.length = 0;
-}
-
-// ==========================================================
-// 大厅 UI
-// ==========================================================
-const $ = (id) => document.getElementById(id);
-
+// =========== 大厅 UI ===========
 function buildShareLink(roomId) {
   const url = new URL(location.href);
   url.hash = '#room=' + roomId;
   return url.toString();
 }
-
-function parseRoomFromInput(text) {
-  text = text.trim();
-  if (!text) return null;
+function parseRoom(text) {
+  text = text.trim(); if (!text) return null;
   const m = text.match(/room=([\w-]+)/);
   if (m) return m[1];
-  if (/^bd-[\w-]+$/.test(text)) return text;
   return text;
+}
+function pickWeapons() {
+  const k1 = WEAPON_KEYS[Math.floor(Math.random() * WEAPON_KEYS.length)];
+  const k2 = WEAPON_KEYS[Math.floor(Math.random() * WEAPON_KEYS.length)];
+  return [k1, k2];
 }
 
 $('btn-host').addEventListener('click', async () => {
@@ -784,64 +1352,46 @@ $('btn-host').addEventListener('click', async () => {
     const id = await net.host();
     const link = buildShareLink(id);
     $('share-link').textContent = link;
-    $('share-link').onclick = () => {
-      navigator.clipboard.writeText(link).then(() => {
-        $('host-status').textContent = '链接已复制!等待对方加入...';
-      });
-    };
+    $('share-link').onclick = () => navigator.clipboard.writeText(link).then(() => $('host-status').textContent = '链接已复制!等待对方加入...');
     $('host-status').textContent = '房间已就绪,把链接发给朋友即可开战';
     net.onOpen = () => {
-      $('host-status').textContent = '玩家已加入,开始游戏!';
       myIndex = 0;
-      setTimeout(startGame, 400);
+      const weapons = pickWeapons();
+      pendingInit = { weapons };
+      net.send({ t: 'init', d: { weapons } });
+      $('host-status').textContent = '玩家已加入,准备开战!';
+      setTimeout(tryStart, 400);
     };
-    net.onClose = () => {
-      $('host-status').textContent = '对方掉线了';
-    };
+    net.onClose = () => $('host-status').textContent = '对方掉线了';
   } catch (e) {
     $('host-status').textContent = '创建失败: ' + (e.message || e.type || e);
   }
 });
-
-$('btn-cancel-host').addEventListener('click', () => {
-  if (net.peer) net.peer.destroy();
-  location.reload();
-});
-
+$('btn-cancel-host').addEventListener('click', () => { if (net.peer) net.peer.destroy(); location.reload(); });
 $('btn-join').addEventListener('click', async () => {
-  const id = parseRoomFromInput($('join-input').value);
+  const id = parseRoom($('join-input').value);
   if (!id) { $('home-status').textContent = '请输入房间链接或 ID'; return; }
   await joinRoom(id);
 });
-
 async function joinRoom(id) {
   $('home-view').classList.add('hidden');
   $('join-view').classList.remove('hidden');
   $('join-status').textContent = '正在连接 ' + id + ' ...';
   try {
     net.onOpen = () => {
-      $('join-status').textContent = '连接成功!';
       myIndex = 1;
-      setTimeout(startGame, 400);
+      $('join-status').textContent = '连接成功,等待房主分配武器...';
     };
-    net.onClose = () => {
-      $('join-status').textContent = '连接断开';
-    };
+    net.onClose = () => $('join-status').textContent = '连接断开';
     await net.join(id);
   } catch (e) {
-    const msg = e.type === 'peer-unavailable'
-      ? '房间不存在或房主已离开,请确认链接正确'
-      : (e.message || e.type || '未知错误');
+    const msg = e.type === 'peer-unavailable' ? '房间不存在或房主已离开' : (e.message || e.type || '未知错误');
     $('join-status').innerHTML = '连接失败: ' + msg + '<br><br><button onclick="location.reload()" style="width:auto;padding:6px 16px">返回</button>';
   }
 }
-
-// 自动从 URL 加入
 (function autoJoin() {
   const m = location.hash.match(/room=([\w-]+)/);
-  if (m) {
-    setTimeout(() => joinRoom(m[1]), 300);
-  }
+  if (m) setTimeout(() => joinRoom(m[1]), 300);
 })();
 
 </script>
