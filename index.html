@@ -94,6 +94,17 @@
       <input id="join-input" placeholder="粘贴房间链接或房间 ID" />
       <button id="btn-join">加入房间</button>
       <div class="status" id="home-status"></div>
+      <div style="margin-top:14px;text-align:center">
+        <a href="#" id="btn-cfg" style="color:#806040;font-size:11px;text-decoration:underline">⚙ 配置 Firebase 信令</a>
+      </div>
+    </div>
+
+    <div id="cfg-view" class="hidden">
+      <div style="font-size:13px;margin-bottom:8px">填入你 Firebase 项目的 Realtime Database URL:</div>
+      <input id="cfg-url" placeholder="https://xxx-default-rtdb.firebaseio.com" />
+      <button class="primary" id="btn-cfg-save">保存</button>
+      <button id="btn-cfg-back">返回</button>
+      <div class="status">数据库规则需要设为 <code style="color:#f0d890">{".read":true,".write":true}</code></div>
     </div>
 
     <div id="host-view" class="hidden">
@@ -135,7 +146,6 @@
   WASD 移动 · 鼠标 视角 · 左键挥武器 · 右键抓取(拖动可控制对方部位) · 空格跳 · Shift 冲刺 · ESC 释放鼠标
 </div>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script type="importmap">
 {
   "imports": {
@@ -259,61 +269,215 @@ class Sfx {
 const sfx = new Sfx();
 
 // ==========================================================
-// 网络层
+// 网络层 — 自建信令(Firebase Realtime DB)+ 原生 WebRTC
 // ==========================================================
+// 默认 Firebase 配置(可在大厅"⚙ 配置"里覆盖,存入 localStorage)
+const DEFAULT_FIREBASE_URL = 'https://blade-duel-2026-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+function getFirebaseURL() {
+  const saved = localStorage.getItem('blade_duel_fb_url');
+  if (saved && saved.startsWith('http')) return saved.replace(/\/$/, '');
+  // 也支持 URL hash 上传配置 #fb=https://xxx
+  const m = location.hash.match(/[#&]fb=([^&]+)/);
+  if (m) {
+    const url = decodeURIComponent(m[1]);
+    localStorage.setItem('blade_duel_fb_url', url);
+    return url.replace(/\/$/, '');
+  }
+  return DEFAULT_FIREBASE_URL;
+}
+
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun.cloudflare.com:3478' },
+  { urls: 'stun:global.stun.twilio.com:3478' },
+  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+];
+
+// Firebase REST 信令封装
+class Signaling {
+  constructor(roomId) {
+    this.roomId = roomId;
+    this.base = getFirebaseURL() + '/rooms/' + roomId;
+    this.pollers = [];
+  }
+  async _put(path, value) {
+    return fetch(this.base + path + '.json', {
+      method: 'PUT', body: JSON.stringify(value),
+    }).then(r => r.json());
+  }
+  async _patch(path, value) {
+    return fetch(this.base + path + '.json', {
+      method: 'PATCH', body: JSON.stringify(value),
+    }).then(r => r.json());
+  }
+  async _post(path, value) {
+    return fetch(this.base + path + '.json', {
+      method: 'POST', body: JSON.stringify(value),
+    }).then(r => r.json());
+  }
+  async _get(path) {
+    return fetch(this.base + path + '.json').then(r => r.json());
+  }
+  async _delete(path) {
+    return fetch(this.base + path + '.json', { method: 'DELETE' });
+  }
+  // 轮询某个路径直到出现非 null 值或超时
+  poll(path, cb, intervalMs = 1500) {
+    let stopped = false;
+    const seen = new Set();
+    const tick = async () => {
+      if (stopped) return;
+      try {
+        const data = await this._get(path);
+        if (data) {
+          if (Array.isArray(data) || typeof data === 'object') {
+            for (const k in data) {
+              if (data[k] && !seen.has(k)) {
+                seen.add(k);
+                cb(data[k], k);
+              }
+            }
+          } else {
+            if (!seen.has('__single')) {
+              seen.add('__single');
+              cb(data);
+            }
+          }
+        }
+      } catch (e) { console.warn('[Sig] poll err', e); }
+      setTimeout(tick, intervalMs);
+    };
+    tick();
+    const stop = () => { stopped = true; };
+    this.pollers.push(stop);
+    return stop;
+  }
+  cleanupPollers() { this.pollers.forEach(s => s()); this.pollers = []; }
+  async destroyRoom() { try { await this._delete(''); } catch (e) {} }
+}
+
 class Net {
   constructor() {
-    this.peer = null; this.conn = null; this.isHost = false;
-    this.onOpen = () => {}; this.onData = () => {}; this.onClose = () => {};
+    this.pc = null;
+    this.dc = null;
+    this.sig = null;
+    this.isHost = false;
+    this.roomId = null;
+    this.onOpen = () => {};
+    this.onData = () => {};
+    this.onClose = () => {};
+    this.onState = () => {};
   }
-  _peerConfig() {
-    return {
-      debug: 1,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' },
-          { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-          { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-          { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-        ],
-      },
-    };
+
+  _newPC() {
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    pc.addEventListener('iceconnectionstatechange', () => {
+      console.log('[Net] iceState=', pc.iceConnectionState);
+      this.onState(pc.iceConnectionState);
+      if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+        // 不立刻关闭,disconnected 可能短暂恢复
+      }
+      if (pc.iceConnectionState === 'closed') this.onClose();
+    });
+    pc.addEventListener('connectionstatechange', () => console.log('[Net] connState=', pc.connectionState));
+    return pc;
   }
+  _wireDC(dc) {
+    this.dc = dc;
+    dc.binaryType = 'arraybuffer';
+    dc.addEventListener('open', () => { console.log('[Net] DC open'); this.onOpen(); });
+    dc.addEventListener('message', (e) => {
+      try { this.onData(JSON.parse(e.data)); } catch (err) {}
+    });
+    dc.addEventListener('close', () => { console.log('[Net] DC close'); this.onClose(); });
+    dc.addEventListener('error', (e) => console.warn('[Net] DC error', e));
+  }
+
   async host() {
     this.isHost = true;
-    return new Promise((resolve, reject) => {
-      const id = 'bd-' + Math.random().toString(36).slice(2, 8);
-      this.peer = new Peer(id, this._peerConfig());
-      this.peer.on('open', (peerId) => resolve(peerId));
-      this.peer.on('connection', (conn) => {
-        this.conn = conn;
-        conn.on('open', () => this.onOpen());
-        conn.on('data', (d) => this.onData(d));
-        conn.on('close', () => this.onClose());
-      });
-      this.peer.on('error', (e) => { if (e.type === 'unavailable-id' || e.type === 'network') reject(e); });
+    this.roomId = 'bd-' + Math.random().toString(36).slice(2, 8);
+    this.sig = new Signaling(this.roomId);
+    console.log('[Net] host roomId=', this.roomId);
+
+    this.pc = this._newPC();
+    // 房主创建 DataChannel
+    const dc = this.pc.createDataChannel('game', { ordered: false, maxRetransmits: 0 });
+    this._wireDC(dc);
+
+    // 收集 ICE 候选并写入 host_ice
+    this.pc.addEventListener('icecandidate', async (ev) => {
+      if (ev.candidate) {
+        await this.sig._post('/host_ice', ev.candidate.toJSON());
+      }
     });
+
+    // 创建 offer
+    const offer = await this.pc.createOffer();
+    await this.pc.setLocalDescription(offer);
+    await this.sig._put('/offer', { type: offer.type, sdp: offer.sdp, ts: Date.now() });
+
+    // 等待 answer + 访客 ICE
+    this.sig.poll('/answer', async (ans) => {
+      if (!this.pc.currentRemoteDescription) {
+        console.log('[Net] got answer');
+        await this.pc.setRemoteDescription(new RTCSessionDescription(ans));
+      }
+    }, 1200);
+    this.sig.poll('/guest_ice', async (cand) => {
+      try { await this.pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) { console.warn('[Net] addIce err', e); }
+    }, 1200);
+
+    return this.roomId;
   }
-  async join(hostId) {
+
+  async join(roomId) {
     this.isHost = false;
+    this.roomId = roomId;
+    this.sig = new Signaling(roomId);
+    console.log('[Net] join roomId=', roomId);
+
+    // 取 offer(可能要等房主写入)
+    const startTs = Date.now();
+    let offer = null;
+    while (Date.now() - startTs < 25000) {
+      offer = await this.sig._get('/offer');
+      if (offer && offer.sdp) break;
+      await new Promise(r => setTimeout(r, 800));
+    }
+    if (!offer || !offer.sdp) throw new Error('找不到房间(房主未在线或链接错误)');
+
+    this.pc = this._newPC();
+    this.pc.addEventListener('datachannel', (ev) => this._wireDC(ev.channel));
+    this.pc.addEventListener('icecandidate', async (ev) => {
+      if (ev.candidate) await this.sig._post('/guest_ice', ev.candidate.toJSON());
+    });
+
+    await this.pc.setRemoteDescription(new RTCSessionDescription(offer));
+    const ans = await this.pc.createAnswer();
+    await this.pc.setLocalDescription(ans);
+    await this.sig._put('/answer', { type: ans.type, sdp: ans.sdp, ts: Date.now() });
+
+    this.sig.poll('/host_ice', async (cand) => {
+      try { await this.pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) { console.warn('[Net] addIce err', e); }
+    }, 1200);
+
+    // 等 DC 打开,30 秒超时
     return new Promise((resolve, reject) => {
-      this.peer = new Peer(this._peerConfig());
-      let opened = false;
-      this.peer.on('open', () => {
-        const conn = this.peer.connect(hostId, { reliable: false });
-        this.conn = conn;
-        const t = setTimeout(() => { if (!opened) reject(new Error('连接超时')); }, 15000);
-        conn.on('open', () => { opened = true; clearTimeout(t); this.onOpen(); resolve(); });
-        conn.on('data', (d) => this.onData(d));
-        conn.on('close', () => this.onClose());
-        conn.on('error', (e) => { clearTimeout(t); reject(e); });
-      });
-      this.peer.on('error', (e) => reject(e));
+      const t = setTimeout(() => reject(new Error('P2P 通道未建立(可能被防火墙拦截)')), 30000);
+      const origOpen = this.onOpen;
+      this.onOpen = () => { clearTimeout(t); origOpen(); resolve(); };
     });
   }
-  send(o) { if (this.conn && this.conn.open) try { this.conn.send(o); } catch (e) {} }
+
+  send(o) {
+    if (this.dc && this.dc.readyState === 'open') {
+      try { this.dc.send(JSON.stringify(o)); } catch (e) {}
+    }
+  }
 }
 
 // ==========================================================
@@ -1345,15 +1509,24 @@ function pickWeapons() {
 }
 
 $('btn-host').addEventListener('click', async () => {
+  // 先做一次 Firebase 连通性测试
+  try {
+    const test = await fetch(getFirebaseURL() + '/_ping.json', { method: 'GET' });
+    if (!test.ok && test.status !== 401) throw new Error('HTTP ' + test.status);
+  } catch (e) {
+    $('home-status').innerHTML = `<span style="color:#e06060">无法访问信令服务器:${getFirebaseURL()}<br>请点击下方"⚙ 配置 Firebase 信令"创建你自己的免费项目并填入</span>`;
+    return;
+  }
   $('home-view').classList.add('hidden');
   $('host-view').classList.remove('hidden');
   try {
-    $('host-status').textContent = '正在连接信令服务器...';
+    $('host-status').textContent = '正在创建房间...';
     const id = await net.host();
     const link = buildShareLink(id);
     $('share-link').textContent = link;
     $('share-link').onclick = () => navigator.clipboard.writeText(link).then(() => $('host-status').textContent = '链接已复制!等待对方加入...');
     $('host-status').textContent = '房间已就绪,把链接发给朋友即可开战';
+    net.onState = (st) => $('host-status').textContent = `等待对方加入...(ICE: ${st})`;
     net.onOpen = () => {
       myIndex = 0;
       const weapons = pickWeapons();
@@ -1367,7 +1540,10 @@ $('btn-host').addEventListener('click', async () => {
     $('host-status').textContent = '创建失败: ' + (e.message || e.type || e);
   }
 });
-$('btn-cancel-host').addEventListener('click', () => { if (net.peer) net.peer.destroy(); location.reload(); });
+$('btn-cancel-host').addEventListener('click', () => {
+  try { if (net.sig) net.sig.destroyRoom(); } catch (e) {}
+  location.reload();
+});
 $('btn-join').addEventListener('click', async () => {
   const id = parseRoom($('join-input').value);
   if (!id) { $('home-status').textContent = '请输入房间链接或 ID'; return; }
@@ -1376,21 +1552,63 @@ $('btn-join').addEventListener('click', async () => {
 async function joinRoom(id) {
   $('home-view').classList.add('hidden');
   $('join-view').classList.remove('hidden');
-  $('join-status').textContent = '正在连接 ' + id + ' ...';
+  const setStatus = (text) => { $('join-status').innerHTML = text; };
+  setStatus('正在连接房间 <b>' + id + '</b> ...<br><span style="color:#888;font-size:11px">通过 Firebase 信令获取连接信息</span>');
+
+  net.onOpen = () => {
+    myIndex = 1;
+    setStatus('✅ 连接成功,等待房主分配武器...');
+  };
+  net.onState = (st) => {
+    setStatus(`正在建立 P2P 通道...<br><span style="color:#888;font-size:11px">ICE: ${st}</span>`);
+  };
+  net.onClose = () => setStatus('连接断开');
+
   try {
-    net.onOpen = () => {
-      myIndex = 1;
-      $('join-status').textContent = '连接成功,等待房主分配武器...';
-    };
-    net.onClose = () => $('join-status').textContent = '连接断开';
     await net.join(id);
   } catch (e) {
-    const msg = e.type === 'peer-unavailable' ? '房间不存在或房主已离开' : (e.message || e.type || '未知错误');
-    $('join-status').innerHTML = '连接失败: ' + msg + '<br><br><button onclick="location.reload()" style="width:auto;padding:6px 16px">返回</button>';
+    console.warn('[Join] failed', e);
+    const msg = e.message || e.type || '未知错误';
+    $('join-status').innerHTML = `
+      <div style="text-align:left;padding:0 8px">
+        <b style="color:#e06060">连接失败:${msg}</b><br><br>
+        <span style="color:#a08868;font-size:12px">可能的原因:</span><br>
+        <ul style="font-size:12px;color:#a08868;line-height:1.7;padding-left:20px">
+          <li>房主页面已关闭/刷新,需要房主重新创建房间</li>
+          <li>当前网络屏蔽 WebRTC UDP,试换 4G 热点</li>
+          <li>浏览器拓展拦截,试无痕模式</li>
+          <li>F12 Console 看 [Net] 日志</li>
+        </ul>
+        <br>
+        <button onclick="location.reload()" style="width:auto;padding:6px 16px">返回重试</button>
+      </div>`;
   }
 }
+// 配置 Firebase 入口
+$('btn-cfg').addEventListener('click', (e) => {
+  e.preventDefault();
+  $('home-view').classList.add('hidden');
+  $('cfg-view').classList.remove('hidden');
+  $('cfg-url').value = getFirebaseURL();
+});
+$('btn-cfg-back').addEventListener('click', () => {
+  $('cfg-view').classList.add('hidden');
+  $('home-view').classList.remove('hidden');
+});
+$('btn-cfg-save').addEventListener('click', () => {
+  const v = $('cfg-url').value.trim();
+  if (v && v.startsWith('http')) {
+    localStorage.setItem('blade_duel_fb_url', v);
+    alert('已保存!现在可以创建房间了');
+    $('cfg-view').classList.add('hidden');
+    $('home-view').classList.remove('hidden');
+  } else {
+    alert('请输入有效的 https://xxx 链接');
+  }
+});
+
 (function autoJoin() {
-  const m = location.hash.match(/room=([\w-]+)/);
+  const m = location.hash.match(/[#&]room=([\w-]+)/);
   if (m) setTimeout(() => joinRoom(m[1]), 300);
 })();
 
